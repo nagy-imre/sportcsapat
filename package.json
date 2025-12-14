@@ -6,7 +6,7 @@
   "scripts": {
     "test": "NODE_ENV=test mocha --file test/mocha.setup.js 'test/**/*.spec.js'",
     "dev": "nodemon app",
-    "start": "node app"
+    "start": "node app/index.js"
   },
   "keywords": [
     "express",

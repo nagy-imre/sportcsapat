@@ -1,121 +1,64 @@
-import Player from '../models/player.js'
+/**
+ * Név: Nagy Imre
+ * Dátum: 2025-12-14
+ * Csoport: XY
+ */
 
-const PlayerController = {
-    async index(req, res) {
-        try {
-            await PlayerController.tryIndex(req, res)
-        }catch(error) {
-            res.status(500)
-            res.json({
-                success: false,
-                message: 'Error! The query is failed!',
-                error: error.message
-            })
-        }
-    },
-    async tryIndex(req, res) {
-        const players = await Player.findAll()
-        res.status(200)
-        res.json({
-            success: true,
-            data: players
-        })
-    },
-    async show(req, res) {
-        try {
-            await PlayerController.tryShow(req, res)
-        }catch(error) {
-            res.status(500)
-            res.json({
-                success: false,
-                message: 'Error! The query is failed!',
-                error: error.message
-            })
-        }
-    },
-    async tryShow(req, res) {
-        const player = await Player.findByPk(req.params.id)
-        res.status(200)
-        res.json({
-            success: true,
-            data: player
-        })
-    },
-    async store(req, res) {
-        try {
-            await PlayerController.tryStore(req, res)
-        }catch(error) {
-            res.status(500)
-            res.json({
-                success: false,
-                message: 'Error! The query is failed!',
-                error: error.message
-            })
-        }
-    },
-    async tryStore(req, res) {
-        const player = await Player.create(req.body)
-        res.status(201)
-        res.json({
-            success: true,
-            data: player
-        })
-    },
-    async update(req, res) {
-        try {
-            await PlayerController.tryUpdate(req, res)
-        }catch(error) {
-            let actualMessage = '';
-            if(error.message == 'Fail! Record not found!') {
-                actualMessage = error.message
-                res.status(404)
-            }else {
-                res.status(500)
-                actualMessage = 'Fail! The query is failed!'
-            }
-            
-            res.json({
-                success: false,
-                message: actualMessage
-            })
-        }
-    },
-    async tryUpdate(req, res) {
-        const recordNumber = await Player.update(req.body, {
-            where: { id: req.params.id }
-        })
-        if(recordNumber == 0) {
-            throw new Error('Fail! Record not found!')
-        }
-        const player = await Player.findByPk(req.params.id)
-        res.status(200)
-        res.json({
-            success: true,
-            data: player
-        })
-    },
-    async destroy(req, res) {
-        try {
-            await PlayerController.tryDestroy(req, res)
-        }catch(error) {
-            res.status(500)
-            res.json({
-                success: false,
-                message: 'Error! The query is failed!',
-                error: error.message
-            })
-        }
-    },
-    async tryDestroy(req, res) {
-        const player = await Player.destroy({
-            where: { id: req.params.id }
-        })
-        res.status(200)
-        res.json({
-            success: true,
-            data: player
-        })
-    }
+import { Player } from '../models/index.js';
+
+export async function index(req, res) {
+  try {
+    const players = await Player.findAll();
+    return res.json(players);
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Error!', error: String(err) });
+  }
 }
 
-export default PlayerController
+export async function store(req, res) {
+  try {
+    const { name } = req.body ?? {};
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ success: false, message: 'Field "name" is required.' });
+    }
+    const created = await Player.create({ name });
+    return res.status(201).json(created);
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Error!', error: String(err) });
+  }
+}
+
+export async function update(req, res) {
+  try {
+    const id = Number(req.params.id);
+    const { name } = req.body ?? {};
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid id.' });
+    }
+    const player = await Player.findByPk(id);
+    if (!player) return res.status(404).json({ success: false, message: 'Player not found.' });
+
+    if (name !== undefined) player.name = name;
+    await player.save();
+
+    return res.json(player);
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Error!', error: String(err) });
+  }
+}
+
+export async function destroy(req, res) {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid id.' });
+    }
+    const player = await Player.findByPk(id);
+    if (!player) return res.status(404).json({ success: false, message: 'Player not found.' });
+
+    await player.destroy();
+    return res.json({ success: true, message: 'Deleted' });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Error!', error: String(err) });
+  }
+}
