@@ -1,4 +1,4 @@
-ű/*
+/*
 * File: index.js
 * Author: Nagy Imre
 * Copyright: 2025, Nagy Imre
